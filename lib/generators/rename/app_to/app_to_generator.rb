@@ -17,7 +17,7 @@ module Rename
 
       private
       def new_module_name(new_name)
-        search_exp = /(#{Regexp.escape("#{Rails.application.class.parent}::")})/mi
+        search_exp = /(#{Regexp.escape("#{Rails.application.class.parent}")})/mi
 
         in_root do
           #Search and replace in to root
@@ -37,14 +37,16 @@ module Rename
       def replace_module_in_file(file, search_exp, module_name)
         return if File.directory?(file)
         gsub_file file, search_exp do |m|
-          "#{module_name}::"
+          module_name
         end
       end
 
       def new_directory_name(new_name)
-        new_dir_name = new_name.gsub(/[^0-9A-Za-z\-_]/, '-')
+        new_app_name = new_name.gsub(/[^0-9A-Za-z\-_]/, '-')
+        new_path = Rails.root.to_s.gsub(/#{Rails.root.to_s.split('/').pop}/, new_app_name)
+
         puts "Renaming directory..."
-        File.rename "#{Rails.root}", "#{new_dir_name}"
+        File.rename "#{Rails.root}", "#{new_path}"
       end
     end
   end
