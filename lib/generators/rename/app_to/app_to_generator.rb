@@ -4,50 +4,48 @@ module Rename
       argument :new_name, :type => :string, :default => "#{Rails.application.class.parent}"
 
       def app_to
-        old_root_directory = "#{Rails.root}"
-        old_name = Regexp.escape("#{Rails.application.class.parent}")
-        rename_to = new_name.downcase.gsub(/\s/, "_").camelize.capitalize
-        new_root_directory = old_root_directory.gsub(/\/#{old_name.downcase}/, "/#{new_name.downcase}")
+        mod_name = new_name.gsub(/[^0-9A-Za-z]/, ' ').split(' ').map {|w| w.capitalize}.join('')
 
-        changes = list_of_changes(rename_to, old_name)
-
-        #Inside the application
-        in_root do
-          for change in changes
-            if change[0] == 'environments'
-              for env_name in ['development', 'production', 'test']
-                change[0] = "config/environments/#{env_name}.rb"
-                replace_on_file(change)
-              end
-            else
-              replace_on_file(change)
-            end
-          end
+        if mod_name.blank?
+          puts "Error:Invalid name"
+          return
         end
-        puts "Renaming directory"
-        File.rename "#{old_root_directory}", "#{new_root_directory}"
+
+        new_module_name(mod_name)
+        new_directory_name(new_name)
       end
 
       private
-      def list_of_changes(rename_to, old_name)
-        return [
-            ['Rakefile', /(#{old_name})(::Application.load_tasks)/mi, "#{rename_to}::Application.load_tasks"],
-            ['config.ru', /(run) (#{old_name})(::Application)/mi, "run #{rename_to}::Application"],
-            ['config/routes.rb', /(#{old_name})(::Application.routes)/mi, "#{rename_to}::Application.routes"],
-            ['config/application.rb', /(module) (#{old_name})/mi, "module #{rename_to}"],
-            ['config/environment.rb', /(#{old_name})(::Application.initialize!)/mi, "#{rename_to}::Application.initialize!"],
-            ['config/initializers/secret_token.rb', /(#{old_name})(::Application.config.secret_token)/mi, "#{rename_to}::Application.config.secret_token"],
-            ['config/initializers/session_store.rb', /(#{old_name})(::Application.config.session_store)/mi, "#{rename_to}::Application.config.session_store"],
-            ['environments', /(#{old_name})(::Application.configure)/mi, "#{rename_to}::Application.configure"]
-        ]
-      end
+      def new_module_name(new_name)
+        search_exp = /(#{Regexp.escape("#{Rails.application.class.parent}::")})/mi
 
-      def replace_on_file(change)
-        gsub_file change[0], change[1] do |match|
-          change[2]
+        in_root do
+          #Search and replace in to root
+          puts "Renaming in root..."
+          Dir["*"].each do |file|
+            replace_module_in_file(file, search_exp, new_name)
+          end
+
+          #Search and replace under config
+          puts "Renaming configuration..."
+          Dir["config/**/**/*.rb"].each do |file|
+            replace_module_in_file(file, search_exp, new_name)
+          end
         end
       end
-    end
 
+      def replace_module_in_file(file, search_exp, module_name)
+        return if File.directory?(file)
+        gsub_file file, search_exp do |m|
+          "#{module_name}::"
+        end
+      end
+
+      def new_directory_name(new_name)
+        new_dir_name = new_name.gsub(/[^0-9A-Za-z\-_]/, '-')
+        puts "Renaming directory..."
+        File.rename "#{Rails.root}", "#{new_dir_name}"
+      end
+    end
   end
 end
