@@ -1,6 +1,6 @@
 # Rename
 
-This plugin allows you to rename your Rails3 application by using a single command.
+This Gem allows you to rename a Rails3 application by using a single command.
 
 
 ## Installation
@@ -12,7 +12,9 @@ Add this line to your application's Gemfile:
 
 ## Usage
 
-<pre><code>rails g rename:app_to NewName</code></pre>
+<pre><code>rails g rename:app_to NewName
+rails g rename:app_to "New-Name"
+</code></pre>
 
 That will rename your application's name in the following files:
 <pre><code>Rakefile
