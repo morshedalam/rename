@@ -48,7 +48,7 @@ module Rename
         puts "Renaming directory..."
         #File.rename "#{Rails.root}", "#{new_path}"
         require 'fileutils'
-        FileUtils.mv Rails.root.to_s, new_path, :force => true
+        File.rename Rails.root.to_s, new_path
       end
     end
   end
