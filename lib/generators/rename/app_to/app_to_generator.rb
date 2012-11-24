@@ -46,7 +46,9 @@ module Rename
         new_path = Rails.root.to_s.gsub(/#{Rails.root.to_s.split('/').pop}/, new_app_name)
 
         puts "Renaming directory..."
-        File.rename "#{Rails.root}", "#{new_path}"
+        #File.rename "#{Rails.root}", "#{new_path}"
+        require 'fileutils'
+        FileUtils.mv Rails.root.to_s, new_path, :force => true
       end
     end
   end
