@@ -4,7 +4,7 @@ module Rename
       argument :new_name, :type => :string, :default => "#{Rails.application.class.parent}"
 
       def app_to
-        mod_name = new_name.gsub(/[^0-9A-Za-z]/, ' ').split(' ').map {|w| w.capitalize}.join('')
+        mod_name = new_name.gsub(/[^0-9A-Za-z]/, ' ').split(' ').map { |w| w.capitalize }.join('')
 
         if mod_name.blank?
           puts "Error:Invalid name"
@@ -21,13 +21,12 @@ module Rename
 
         in_root do
           #Search and replace in to root
-          puts "Renaming in root..."
+          puts "Search and Replace Module in to..."
           Dir["*"].each do |file|
             replace_module_in_file(file, search_exp, new_name)
           end
 
           #Search and replace under config
-          puts "Renaming configuration..."
           Dir["config/**/**/*.rb"].each do |file|
             replace_module_in_file(file, search_exp, new_name)
           end
@@ -36,19 +35,26 @@ module Rename
 
       def replace_module_in_file(file, search_exp, module_name)
         return if File.directory?(file)
-        gsub_file file, search_exp do |m|
-          module_name
+
+        begin
+          gsub_file file, search_exp do |m|
+            module_name
+          end
+        rescue Exception => ex
+          puts "Error:#{ex.message}"
         end
       end
 
       def new_directory_name(new_name)
-        new_app_name = new_name.gsub(/[^0-9A-Za-z\-_]/, '-')
-        new_path = Rails.root.to_s.gsub(/#{Rails.root.to_s.split('/').pop}/, new_app_name)
-
-        puts "Renaming directory..."
-        #File.rename "#{Rails.root}", "#{new_path}"
-        require 'fileutils'
-        File.rename Rails.root.to_s, new_path
+        begin
+          print "Renaming directory..."
+          new_app_name = new_name.gsub(/[^0-9A-Za-z_]/, '-')
+          new_path = Rails.root.to_s.split('/')[0...-1].push(new_app_name).join('/')
+          File.rename(Rails.root.to_s, new_path)
+          puts "Done!"
+        rescue Exception => ex
+          puts "Error:#{ex.message}"
+        end
       end
     end
   end
