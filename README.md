@@ -16,18 +16,6 @@ Add this line to your application's Gemfile:
 rails g rename:app_to "New-Name"
 </code></pre>
 
-That will rename your application's name in the following files:
-<pre><code>Rakefile
-config.ru
-config/routes.rb
-config/application.rb
-config/environment.rb
-config/environments/development.rb
-config/environments/test.rb
-config/environments/production.rb
-initializers/secret_token.rb
-initializers/session_store.rb
-</code></pre>
 
 
 ## Contributing
