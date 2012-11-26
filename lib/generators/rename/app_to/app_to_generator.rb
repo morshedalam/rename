@@ -17,7 +17,7 @@ module Rename
 
       private
       def new_module_name(new_name)
-        search_exp = /(#{Regexp.escape("#{Rails.application.class.parent}")})/mi
+        search_exp = /(#{Regexp.escape("#{Rails.application.class.parent}")})/m
 
         in_root do
           #Search and replace in to root
@@ -30,6 +30,12 @@ module Rename
           Dir["config/**/**/*.rb"].each do |file|
             replace_module_in_file(file, search_exp, new_name)
           end
+
+          #Rename session key
+          session_key_file = 'config/initializers/session_store.rb'
+          search_exp = /((\'|\")_.*_session(\'|\"))/i
+          session_key = "'_#{new_name.gsub(/[^0-9A-Za-z_]/, '_').downcase}_session'"
+          replace_module_in_file(session_key_file, search_exp, session_key)
         end
       end
 
