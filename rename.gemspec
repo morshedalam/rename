@@ -6,7 +6,7 @@ Gem::Specification.new do |gem|
   gem.version       = Rename::VERSION
   gem.authors       = ["Morshed Alam"]
   gem.email         = ["morshed201@gmail.com"]
-  gem.homepage      = "https://github.com/get/Rename.git"
+  gem.homepage      = "https://github.com/morshedalam/rename"
   gem.description   = 'This library allows you to rename Rails3 application by using a single command'
   gem.summary       = 'A library to rename your rails3 application'
 
