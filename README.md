@@ -12,8 +12,7 @@ Add this line to your application's Gemfile:
 
 ## Usage
 
-<pre><code>rails g rename:app_to NewName
-rails g rename:app_to "New-Name"
+<pre><code>rails g rename:app_to New-Name
 </code></pre>
 
 
