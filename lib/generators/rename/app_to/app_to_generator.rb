@@ -6,7 +6,7 @@ module Rename
       def app_to
         return if !valid_app_name?
         new_module_name()
-        new_directory_name()
+        new_basename()
       end
 
       private
@@ -37,7 +37,7 @@ module Rename
           puts "Search and Replace Module in to..."
 
           #Search and replace module in to file
-          Dir["*", "config/**/**/*.rb"].each do |file|
+          Dir["*", "config/**/**/*.rb", ".{rvmrc}"].each do |file|
             search_and_replace_module_into_file(file, search_exp, module_name)
           end
 
@@ -49,15 +49,32 @@ module Rename
         end
       end
 
-      def new_directory_name()
+      def new_basename()
+        basename = new_name.gsub(/[^0-9A-Za-z_]/, '-')
+
+        change_basename(basename)
+        change_directory_name(basename)
+
+        puts "Done!"
+      end
+
+      def change_basename(basename)
+        puts "Renaming basename..."
+
+        in_root do
+          Dir.glob(".idea/*", File::FNM_DOTMATCH).each do |file|
+            search_and_replace_module_into_file(file, File.basename(Dir.getwd), basename)
+          end
+
+          search_and_replace_module_into_file(".ruby-gemset", File.basename(Dir.getwd), basename)
+        end
+      end
+
+      def change_directory_name(basename)
         begin
-          print "Renaming application directory..."
-
-          new_app_name = new_name.gsub(/[^0-9A-Za-z_]/, '-')
-          new_path = Rails.root.to_s.split('/')[0...-1].push(new_app_name).join('/')
-
+          print "Renaming directory..."
+          new_path = Rails.root.to_s.split('/')[0...-1].push(basename).join('/')
           File.rename(Rails.root.to_s, new_path)
-          puts "Done!"
         rescue Exception => ex
           puts "Error:#{ex.message}"
         end
@@ -67,11 +84,9 @@ module Rename
         return if File.directory?(file)
 
         begin
-          gsub_file file, search_exp do |m|
-            new_module_name
-          end
+          gsub_file file, search_exp, new_module_name
         rescue Exception => ex
-          puts "Error:#{ex.message}"
+          puts "Error: #{ex.message}"
         end
       end
     end
