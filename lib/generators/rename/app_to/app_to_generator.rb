@@ -7,7 +7,6 @@ module Rename
         return if !valid_app_name?
         new_module_name()
         new_basename()
-        puts "Done!"
       end
 
       private
@@ -76,6 +75,7 @@ module Rename
           print "Renaming directory..."
           new_path = Rails.root.to_s.split('/')[0...-1].push(basename).join('/')
           File.rename(Rails.root.to_s, new_path)
+          puts "Done!"
         rescue Exception => ex
           puts "Error:#{ex.message}"
         end
