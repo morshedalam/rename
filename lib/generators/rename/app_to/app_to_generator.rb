@@ -1,83 +1,118 @@
 module Rename
   module Generators
+    class Error < Thor::Error
+    end
+
     class AppToGenerator < Rails::Generators::Base
-      argument :new_name, :type => :string
+      desc 'Rename rails application'
+
+      argument :new_name, :type => :string, :default => ''
 
       def app_to
-        return if !valid_app_name?
-        new_module_name()
-        new_basename()
+        valid?
+        new_app_module
+        new_app_directory
       end
 
-      private
+      protected
 
-      def valid_app_name?
-        if new_name.to_s.strip.blank?
-          puts "Please enter new application name"
-          return false
-        elsif new_name.match(/^[A-Za-z]/).nil?
-          puts "Invalid application name"
-          return false
-        elsif new_name.size < 3
-          puts "New application name too short"
-          return false
-        elsif new_name.scan(/[0-9A-Za-z]/).size < 3
-          puts "Name should have minimum 3 alphanumeric characters"
-          return false
+      def app_name
+        @app_name = new_name.gsub(/\W/, '_').squeeze('_').camelize
+      end
+
+      def app_key
+        @app_key = new_name.gsub(/\W/, '_').downcase
+      end
+
+      def app_dir
+        @app_dir = new_name.gsub(/[&%*@()!{}\[\]'\\\/"]+/, '')
+      end
+
+      def app_path
+        @app_path = Rails.root.to_s.split('/')[0...-1].push(app_dir).join('/')
+      end
+
+      def reserved_names
+        @reserved_names = %w[application destroy benchmarker profiler plugin runner test]
+      end
+
+      def valid?
+        if new_name.blank?
+          raise Error, "Application name can't be blank."
+        elsif new_name =~ /^\d/
+          raise Error, "Invalid application name #{new_name}. Please give a name which does not start with numbers."
         end
 
-        return true
+        valid_new_app_name?
+        valid_new_app_dir?
       end
 
-      def new_module_name()
+      def valid_new_app_name?
+        if app_name.size < 1
+          raise Error, "Invalid application name #{app_name}. Please enter at least one alphabet."
+        elsif reserved_names.include?(app_name.downcase)
+          raise Error, "Invalid application name #{app_name}. Please give a name which does not match one of the reserved rails words."
+        elsif Object.const_defined?(app_name)
+          raise Error, "Invalid application name #{app_name}, constant #{app_name} is already in use. Please choose another application name."
+        end
+      end
+
+      def valid_new_app_dir?
+        if File.exists?(app_path)
+          raise Error, "Invalid application name #{app_dir}, already in use. Please choose another application name."
+        end
+      end
+
+      # rename_app_to_new_app_module
+      #
+      def new_app_module
         search_exp = /(#{Regexp.escape("#{Rails.application.class.parent}")})/m
-        module_name = new_name.gsub(/[^0-9A-Za-z]/, ' ').split(' ').map { |w| w.capitalize }.join('')
 
         in_root do
-          puts "Search and Replace Module in to..."
+          puts 'Search and replace module in to...'
 
           #Search and replace module in to file
-          Dir["*", "config/**/**/*.rb", ".{rvmrc}"].each do |file|
-            replace_into_file(file, search_exp, module_name)
+          Dir['*', 'config/**/**/*.rb', '.{rvmrc}'].each do |file|
+            replace_into_file(file, search_exp, app_name)
           end
 
           #Rename session key
           session_key_file = 'config/initializers/session_store.rb'
-          search_exp = /((\'|\")_.*_session(\'|\"))/i
-          session_key = "'_#{module_name.gsub(/[^0-9A-Za-z_]/, '_').downcase}_session'"
+          search_exp = /(('|")_.*_session('|"))/i
+          session_key = "'_#{app_key}_session'"
           replace_into_file(session_key_file, search_exp, session_key)
         end
       end
 
-      def new_basename()
-        basename = new_name.gsub(/[^0-9A-Za-z_]/, '-')
-        change_basename(basename)
-        change_directory_name(basename)
+      # rename_app_to_new_app_directory
+      #
+      def new_app_directory
+        rename_references
+        rename_directory
       end
 
-      def change_basename(basename)
-        puts "Renaming basename..."
-
+      def rename_references
+        puts 'Renaming references...'
         old_basename = File.basename(Dir.getwd)
 
         in_root do
-          Dir.glob(".idea/*", File::FNM_DOTMATCH).each do |file|
-            replace_into_file(file, old_basename, basename)
+          Dir.glob('.idea/*', File::FNM_DOTMATCH).each do |file|
+            replace_into_file(file, old_basename, app_dir)
           end
 
-          gemset_file = ".ruby-gemset"
-          replace_into_file(gemset_file, old_basename, basename) if File.exist?(gemset_file)
+          gem_set_file = '.ruby-gemset'
+          replace_into_file(gem_set_file, old_basename, app_dir) if File.exist?(gem_set_file)
         end
       end
 
-      def change_directory_name(basename)
+      def rename_directory
+        print 'Renaming directory...'
         begin
-          print "Renaming directory..."
-          new_path = Rails.root.to_s.split('/')[0...-1].push(basename).join('/')
-          File.rename(Rails.root.to_s, new_path)
-          puts "Done!"
+          File.rename(Rails.root.to_s, app_path)
+          puts 'Done!'
+          puts "New application path is '#{app_path}'"
         rescue Exception => ex
-          puts "Error:#{ex.message}"
+          puts "Error:#{ex.inspect}"
         end
       end
 
