@@ -64,16 +64,15 @@ module Rename
       end
 
       # rename_app_to_new_app_module
-      #
       def new_app_module
-        search_exp = /(#{Regexp.escape("#{Rails.application.class.parent}")})/m
+        mod = "#{Rails.application.class.parent}"
 
         in_root do
           puts 'Search and replace module in to...'
 
           #Search and replace module in to file
           Dir['*', 'config/**/**/*.rb', '.{rvmrc}'].each do |file|
-            replace_into_file(file, search_exp, app_name)
+            replace_into_file(file, /(#{mod}*)/m, app_name)
           end
 
           #Rename session key
@@ -85,7 +84,6 @@ module Rename
       end
 
       # rename_app_to_new_app_directory
-      #
       def new_app_directory
         rename_references
         rename_directory
