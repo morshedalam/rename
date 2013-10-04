@@ -4,6 +4,7 @@ require File.expand_path('../lib/rename/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.name          = 'rename'
   gem.version       = Rename::VERSION
+  gem.license       = 'MIT'
   gem.authors       = ['Morshed Alam']
   gem.email         = %w(morshed201@gmail.com)
   gem.homepage      = 'https://github.com/morshedalam/rename'
