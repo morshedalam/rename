@@ -1,0 +1,1 @@
+rails g rename:into NewName
