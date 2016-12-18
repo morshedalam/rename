@@ -3,8 +3,8 @@ module Rename
     class Error < Thor::Error
     end
 
-    class AppToGenerator < Rails::Generators::Base
-      desc 'Rename rails application'
+    class IntoGenerator < Rails::Generators::Base
+      desc 'Rename your Rails application'
 
       argument :new_name, :type => :string, :default => ''
 
@@ -51,7 +51,7 @@ module Rename
         if app_name.size < 1
           raise Error, "Invalid application name #{app_name}. Please enter at least one alphabet."
         elsif reserved_names.include?(app_name.downcase)
-          raise Error, "Invalid application name #{app_name}. Please give a name which does not match one of the reserved rails words."
+          raise Error, "Invalid application name #{app_name}. Please give a name which does not match one of the reserved Rails keywords."
         elsif Object.const_defined?(app_name)
           raise Error, "Invalid application name #{app_name}, constant #{app_name} is already in use. Please choose another application name."
         end
@@ -68,7 +68,7 @@ module Rename
         mod = "#{Rails.application.class.parent}"
 
         in_root do
-          puts 'Search and replace module in to...'
+          puts 'Search and replace module in...'
 
           #Search and replace module in to file
           Dir['*', 'config/**/**/*.rb', '.{rvmrc}'].each do |file|

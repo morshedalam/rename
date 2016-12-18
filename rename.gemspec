@@ -8,8 +8,7 @@ Gem::Specification.new do |gem|
   gem.authors       = ['Morshed Alam']
   gem.email         = %w(morshed201@gmail.com)
   gem.homepage      = 'https://github.com/morshedalam/rename'
-  gem.description   = 'This library allows you to rename rails application using a single command'
-  gem.summary       = 'A library to rename your rails3 application'
+  gem.summary       = 'Rename your Rails application using a single command.'
 
   gem.add_dependency 'rails','>= 3.0.0'
   gem.rubyforge_project = 'rename'
