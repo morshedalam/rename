@@ -1,4 +1,4 @@
-require File.expand_path('../../../rename/common_methods', File.dirname(__FILE__))
+require File.expand_path('../shared/common_methods', File.dirname(__FILE__))
 
 module Rename
   module Generators
