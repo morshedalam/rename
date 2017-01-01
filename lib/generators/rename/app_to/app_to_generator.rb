@@ -5,10 +5,12 @@ module Rename
     class Error < Thor::Error
     end
 
-    class IntoGenerator < Rails::Generators::Base
+    class AppToGenerator < Rails::Generators::Base
       include CommonMethods
 
-      def into
+      def app_to
+        warn "[DEPRECATION] `app_to` is deprecated.  Please use `into` instead."
+
         valid?
         new_app_module
         new_app_directory
