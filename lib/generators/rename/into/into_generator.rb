@@ -6,9 +6,7 @@ module Rename
       include CommonMethods
 
       def into
-        validate_name_and_path?
-        apply_app_module
-        change_app_directory
+        perform
       end
     end
   end

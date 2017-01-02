@@ -7,10 +7,7 @@ module Rename
 
       def app_to
         warn '[DEPRECATION] `app_to` is deprecated.  Please use `into` instead.'
-
-        validate_name_and_path?
-        apply_app_module
-        change_app_directory
+        perform
       end
     end
   end
