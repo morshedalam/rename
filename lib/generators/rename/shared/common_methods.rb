@@ -16,7 +16,7 @@ module CommonMethods
   end
 
   def app_key
-    @app_key = new_name.gsub(/\W/, '_').downcase
+    @app_key = new_name.gsub(/\W/, '_')
   end
 
   def app_dir
@@ -27,39 +27,28 @@ module CommonMethods
     @app_path = Rails.root.to_s.split('/')[0...-1].push(app_dir).join('/')
   end
 
+  def validate_name_and_path?
+    if new_name.blank?
+      raise Thor::Error, "[Error] Application name can't be blank."
+    elsif new_name =~ /^\d/
+      raise Thor::Error, '[Error] Please give a name which does not start with numbers.'
+    elsif app_name.size < 1
+      raise Thor::Error, '[Error] Please enter at least one alphabet.'
+    elsif reserved_names.include?(app_name.downcase)
+      raise Thor::Error, '[Error] Please give a name which does not match any of the reserved Rails keywords.'
+    elsif Object.const_defined?(app_name)
+      raise Thor::Error, "[Error] Constant #{app_name} is already in use, please choose another name."
+    elsif File.exists?(app_path)
+      raise Thor::Error, '[Error] Already in use, please choose another name.'
+    end
+  end
+
   def reserved_names
     @reserved_names = %w[application destroy benchmarker profiler plugin runner test]
   end
 
-  def valid?
-    if new_name.blank?
-      raise Error, "Application name can't be blank."
-    elsif new_name =~ /^\d/
-      raise Error, "Invalid application name #{new_name}. Please give a name which does not start with numbers."
-    end
-
-    valid_new_app_name?
-    valid_new_app_dir?
-  end
-
-  def valid_new_app_name?
-    if app_name.size < 1
-      raise Error, "Invalid application name #{app_name}. Please enter at least one alphabet."
-    elsif reserved_names.include?(app_name.downcase)
-      raise Error, "Invalid application name #{app_name}. Please give a name which does not match one of the reserved Rails keywords."
-    elsif Object.const_defined?(app_name)
-      raise Error, "Invalid application name #{app_name}, constant #{app_name} is already in use. Please choose another application name."
-    end
-  end
-
-  def valid_new_app_dir?
-    if File.exists?(app_path)
-      raise Error, "Invalid application name #{app_dir}, already in use. Please choose another application name."
-    end
-  end
-
   # rename_app_to_new_app_module
-  def new_app_module
+  def apply_app_module
     mod = "#{Rails.application.class.parent}"
 
     in_root do
@@ -67,6 +56,8 @@ module CommonMethods
 
       #Search and replace module in to file
       Dir['*', 'config/**/**/*.rb', '.{rvmrc}'].each do |file|
+        # file = File.join(Dir.pwd, file)
+        puts "->#{file} ->>#{mod} ->>>#{app_name}"
         replace_into_file(file, /(#{mod}*)/m, app_name)
       end
 
@@ -79,7 +70,7 @@ module CommonMethods
   end
 
   # rename_app_to_new_app_directory
-  def new_app_directory
+  def change_app_directory
     rename_references
     rename_directory
   end
@@ -100,7 +91,9 @@ module CommonMethods
 
   def rename_directory
     print 'Renaming directory...'
+
     begin
+      # FileUtils.mv Dir.pwd, app_path
       File.rename(Rails.root.to_s, app_path)
       puts 'Done!'
       puts "New application path is '#{app_path}'"
