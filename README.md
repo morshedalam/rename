@@ -2,7 +2,7 @@
 
 This gem allows you to rename your Rails application by using a single command.
 
-Tested up to Rails 5. 
+Tested up to Rails 5.
 
 ## Installation
 
@@ -15,9 +15,8 @@ gem 'rename'
 ## Usage
 
 ```
-rails g rename:into New-Name
+rails g rename:app_to New-Name
 ```
-
 
 ## Contributing
 
