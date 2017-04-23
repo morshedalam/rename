@@ -11,7 +11,7 @@ Gem::Specification.new do |gem|
   gem.summary  = 'Rename your Rails application using a single command.'
 
   gem.add_dependency 'rails', '>= 3.0.0'
-  gem.add_dependency 'thor', '= 0.19.1'
+  gem.add_dependency 'thor', '>= 0.19.1'
   gem.add_runtime_dependency 'activesupport'
   gem.rubyforge_project = 'rename'
 
