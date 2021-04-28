@@ -78,7 +78,7 @@ module CommonMethods
 
       # config/database.yml capitalize environment variable
       replace_into_file('config/database.yml', "ENV['#{@new_module_name.underscore}_DATABASE_PASSWORD']",
-                        "ENV[''#{@new_module_name.underscore.upcase}_DATABASE_PASSWORD']")
+                        "ENV['#{@new_module_name.underscore.upcase}_DATABASE_PASSWORD']")
 
     end
   end
