@@ -18,9 +18,17 @@ module CommonMethods
     change_app_directory
   end
 
+  def app_parent
+    if Rails::VERSION::MAJOR >= 6
+      Rails.application.class.module_parent.name
+    else
+      Rails.application.class.parent.name
+    end
+  end
+
   def prepare_app_vars
     @new_key         = new_name.gsub(/\W/, '_')
-    @old_module_name = Rails.application.class.to_s.deconstantize
+    @old_module_name = app_parent
     @new_module_name = @new_key.squeeze('_').camelize
     @new_dir         = new_name.gsub(/[&%*@()!{}\[\]'\\\/"]+/, '')
     @new_path        = Rails.root.to_s.split('/')[0...-1].push(@new_dir).join('/')
