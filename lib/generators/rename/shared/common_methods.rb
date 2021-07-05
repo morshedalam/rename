@@ -19,8 +19,8 @@ module CommonMethods
   end
 
   def app_parent
-    if Rails::VERSION::MAJOR >= 6
-      Rails.application.class.module_parent.name
+    if Rails.version.to_f >= 3.3
+      Rails.application.class.to_s.deconstantize
     else
       Rails.application.class.parent.name
     end
@@ -53,7 +53,7 @@ module CommonMethods
   # rename_app_to_new_app_module
   def apply_new_module_name
     in_root do
-      puts 'Search and replace module in...'
+      puts 'Search and replace module in files...'
 
       #Search and replace module in to file
       Dir['*', 'config/**/**/*.rb', '.{rvmrc}'].each do |file|
@@ -65,29 +65,22 @@ module CommonMethods
       replace_into_file('config/initializers/session_store.rb', /(('|")_.*_session('|"))/i, "'_#{@new_key}_session'")
       #Rename database
       replace_into_file('config/database.yml', /#{@old_module_name.underscore}/i, @new_name.underscore)
-
-
+      #Rename into channel and job queue
+      %w(config/cable.yml config/environments/production.rb).each do |file|
+        replace_into_file(file, /#{@old_module_name.underscore}_production/, "#{@new_module_name.underscore}_production")
+      end
+      #Application layout
+      %w(erb haml).each do |file|
+        replace_into_file("app/views/layouts/application.html.#{file}", /#{@old_module_name}/, @new_module_name)
+      end
       # Update package.json name entry
       old_package_name_regex = /\Wname\W *: *\W(?<name>[-_\p{Alnum}]+)\W *, */i
       new_package_name = %("name":"#{@new_module_name.underscore}",)
       replace_into_file('package.json', old_package_name_regex, new_package_name)
 
-      # Update app/views/layouts/application.html.erb title
-      replace_into_file('app/views/layouts/application.html.erb', "<title>#{@old_module_name}</title>",
-                        "<title>#{@new_module_name}</title>")
-
-      # Update channel prefix config/cable.yml
-      replace_into_file('config/cable.yml', "#{@old_module_name.underscore}_production",
-                        "#{@new_module_name.underscore}_production")
-
-      # Update config/environments/production.rb  # config.active_job.queue_name_prefix = "(myapp)_production"
-      replace_into_file('config/environments/production.rb', "#{@old_module_name.underscore}_production",
-                        "#{@new_module_name.underscore}_production")
-
-      # config/database.yml capitalize environment variable
-      replace_into_file('config/database.yml', "ENV['#{@new_module_name.underscore}_DATABASE_PASSWORD']",
-                        "ENV['#{@new_module_name.underscore.upcase}_DATABASE_PASSWORD']")
-
+      puts 'Search and replace module in environment variables...'
+      #Rename database
+      replace_into_file('config/database.yml', /#{@old_module_name.underscore.upcase}/, @new_module_name.underscore.upcase)
     end
   end
 
@@ -131,7 +124,7 @@ module CommonMethods
   end
 
   def replace_into_file(file, search_exp, replace)
-    return if File.directory?(file)
+    return if File.directory?(file) || !File.exists?(file)
 
     begin
       gsub_file file, search_exp, replace
