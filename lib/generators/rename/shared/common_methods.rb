@@ -18,9 +18,17 @@ module CommonMethods
     change_app_directory
   end
 
+  def app_parent
+    if Rails::VERSION::MAJOR >= 6
+      Rails.application.class.module_parent.name
+    else
+      Rails.application.class.parent.name
+    end
+  end
+
   def prepare_app_vars
     @new_key         = new_name.gsub(/\W/, '_')
-    @old_module_name = Rails.application.class.parent.to_s
+    @old_module_name = app_parent
     @new_module_name = @new_key.squeeze('_').camelize
     @new_dir         = new_name.gsub(/[&%*@()!{}\[\]'\\\/"]+/, '')
     @new_path        = Rails.root.to_s.split('/')[0...-1].push(@new_dir).join('/')
@@ -57,6 +65,29 @@ module CommonMethods
       replace_into_file('config/initializers/session_store.rb', /(('|")_.*_session('|"))/i, "'_#{@new_key}_session'")
       #Rename database
       replace_into_file('config/database.yml', /#{@old_module_name.underscore}/i, @new_name.underscore)
+
+
+      # Update package.json name entry
+      old_package_name_regex = /\Wname\W *: *\W(?<name>[-_\p{Alnum}]+)\W *, */i
+      new_package_name = %("name":"#{@new_module_name.underscore}",)
+      replace_into_file('package.json', old_package_name_regex, new_package_name)
+
+      # Update app/views/layouts/application.html.erb title
+      replace_into_file('app/views/layouts/application.html.erb', "<title>#{@old_module_name}</title>",
+                        "<title>#{@new_module_name}</title>")
+
+      # Update channel prefix config/cable.yml
+      replace_into_file('config/cable.yml', "#{@old_module_name.underscore}_production",
+                        "#{@new_module_name.underscore}_production")
+
+      # Update config/environments/production.rb  # config.active_job.queue_name_prefix = "(myapp)_production"
+      replace_into_file('config/environments/production.rb', "#{@old_module_name.underscore}_production",
+                        "#{@new_module_name.underscore}_production")
+
+      # config/database.yml capitalize environment variable
+      replace_into_file('config/database.yml', "ENV['#{@new_module_name.underscore}_DATABASE_PASSWORD']",
+                        "ENV['#{@new_module_name.underscore.upcase}_DATABASE_PASSWORD']")
+
     end
   end
 
