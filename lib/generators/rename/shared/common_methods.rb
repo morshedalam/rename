@@ -45,7 +45,7 @@ module CommonMethods
       raise Thor::Error, '[Error] Please give a name which does not match any of the reserved Rails keywords.'
     elsif Object.const_defined?(@new_module_name)
       raise Thor::Error, "[Error] Constant #{@new_module_name} is already in use, please choose another name."
-    elsif File.exists?(@new_path)
+    elsif File.exist?(@new_path)
       raise Thor::Error, '[Error] Already in use, please choose another name.'
     end
   end
@@ -124,7 +124,7 @@ module CommonMethods
   end
 
   def replace_into_file(file, search_exp, replace)
-    return if File.directory?(file) || !File.exists?(file)
+    return if File.directory?(file) || !File.exist?(file)
 
     begin
       gsub_file file, search_exp, replace
