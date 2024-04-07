@@ -45,7 +45,7 @@ module CommonMethods
       raise Thor::Error, '[Error] Please give a name which does not match any of the reserved Rails keywords.'
     elsif Object.const_defined?(@new_module_name)
       raise Thor::Error, "[Error] Constant #{@new_module_name} is already in use, please choose another name."
-    elsif File.exists?(@new_path)
+    elsif file_exist?(@new_path)
       raise Thor::Error, '[Error] Already in use, please choose another name.'
     end
   end
@@ -96,6 +96,10 @@ module CommonMethods
     @reserved_names = %w[application destroy benchmarker profiler plugin runner test]
   end
 
+  def file_exist?(name)
+    File.respond_to?(:exist?) ? File.exist?(name) : File.exists?(name)
+  end
+
   def rename_references
     puts 'Renaming references...'
     old_basename = File.basename(Dir.getwd)
@@ -106,7 +110,7 @@ module CommonMethods
       end
 
       gem_set_file = '.ruby-gemset'
-      replace_into_file(gem_set_file, old_basename, @new_dir) if File.exist?(gem_set_file)
+      replace_into_file(gem_set_file, old_basename, @new_dir) if file_exist?(gem_set_file)
     end
   end
 
@@ -124,7 +128,7 @@ module CommonMethods
   end
 
   def replace_into_file(file, search_exp, replace)
-    return if File.directory?(file) || !File.exists?(file)
+    return if File.directory?(file) || !file_exist?(file)
 
     begin
       gsub_file file, search_exp, replace
