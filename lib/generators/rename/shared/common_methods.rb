@@ -44,9 +44,9 @@ module CommonMethods
     elsif reserved_names.include?(@new_module_name.downcase)
       raise Thor::Error, '[Error] Please give a name which does not match any of the reserved Rails keywords.'
     elsif Object.const_defined?(@new_module_name)
-      raise Thor::Error, "[Error] Constant #{@new_module_name} is already in use, please choose another name."
+      raise Thor::Error, "[Error] Constant '#{@new_module_name}' is already in use, please choose another name."
     elsif file_exist?(@new_path)
-      raise Thor::Error, '[Error] Already in use, please choose another name.'
+      raise Thor::Error, "[Error] Folder '#{@new_dir}' already in use, please choose another name."
     end
   end
 

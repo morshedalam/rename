@@ -2,7 +2,7 @@
 
 This gem allows you to rename your Rails application by using a single command.
 
-Tested up to Rails 6.1.
+Tested up to Ruby 3.2.2 and Rails 7.0.8
 
 ## Installation
 

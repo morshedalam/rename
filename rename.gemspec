@@ -9,6 +9,7 @@ Gem::Specification.new do |gem|
   gem.email    = %w(morshed201@gmail.com)
   gem.homepage = 'https://github.com/morshedalam/rename'
   gem.summary  = 'Rename your Rails application using a single command.'
+  gem.required_ruby_version = ">= 1.8.7"
 
   gem.add_dependency 'rails', '>= 3.0.0'
   gem.add_dependency 'thor', '>= 0.19.1'
