@@ -15,7 +15,8 @@ module CommonMethods
     prepare_app_vars
     validate_name_and_path?
     apply_new_module_name
-    change_app_directory
+    remove_references
+    rename_directory
   end
 
   def app_parent
@@ -54,42 +55,34 @@ module CommonMethods
   # rename_app_to_new_app_module
   def apply_new_module_name
     in_root do
-      puts 'Search and replace module in files...'
-
-      #Search and replace module in to file
+      puts 'Search and replace exact module name...'
       Dir['*', 'config/**/**/*.rb', '.{rvmrc}'].each do |file|
         # file = File.join(Dir.pwd, file)
         replace_into_file(file, /(#{@old_module_name}*)/m, @new_module_name)
       end
+      #Application layout
+      %w(erb haml slim).each do |ext|
+        replace_into_file("app/views/layouts/application.html.#{ext}", /#{@old_module_name}/, @new_module_name)
+      end
+      #Readme
+      %w(md markdown mdown mkdn).each do |ext|
+        replace_into_file("README.#{ext}", /#{@old_module_name}/, @new_module_name)
+      end
 
-      #Rename session key
+      puts 'Search and replace underscore seperated module name in files...'
+      #session key
       replace_into_file('config/initializers/session_store.rb', /(('|")_.*_session('|"))/i, "'_#{@new_key}_session'")
-      #Rename database
+      #database
       replace_into_file('config/database.yml', /#{@old_module_name.underscore}/i, @new_name.underscore)
-      #Rename into channel and job queue
+      #Channel and job queue
       %w(config/cable.yml config/environments/production.rb).each do |file|
         replace_into_file(file, /#{@old_module_name.underscore}_production/, "#{@new_module_name.underscore}_production")
       end
-      #Application layout
-      %w(erb haml).each do |file|
-        replace_into_file("app/views/layouts/application.html.#{file}", /#{@old_module_name}/, @new_module_name)
-      end
-      # Update package.json name entry
+      # package.json name entry
       old_package_name_regex = /\Wname\W *: *\W(?<name>[-_\p{Alnum}]+)\W *, */i
-      new_package_name = %("name":"#{@new_module_name.underscore}",)
+      new_package_name       = %("name":"#{@new_module_name.underscore}",)
       replace_into_file('package.json', old_package_name_regex, new_package_name)
-
-      puts 'Search and replace module in environment variables...'
-      #Rename database
-      replace_into_file('config/database.yml', /#{@old_module_name.underscore.upcase}/, @new_module_name.underscore.upcase)
     end
-  end
-
-  # rename_app_to_new_app_directory
-  def change_app_directory
-    rename_references
-    remove_references
-    rename_directory
   end
 
   private
@@ -100,16 +93,6 @@ module CommonMethods
 
   def file_exist?(name)
     File.respond_to?(:exist?) ? File.exist?(name) : File.exists?(name)
-  end
-
-  def rename_references
-    print 'Renaming references...'
-
-    in_root do
-      gem_set_file = '.ruby-gemset'
-      replace_into_file(gem_set_file, @old_dir, @new_dir) if file_exist?(gem_set_file)
-    end
-    puts 'Done!'
   end
 
   def remove_references
@@ -127,6 +110,8 @@ module CommonMethods
 
     begin
       # FileUtils.mv Dir.pwd, app_path
+      gem_set_file = '.ruby-gemset'
+      replace_into_file(gem_set_file, @old_dir, @new_dir) if file_exist?(gem_set_file)
       File.rename(Rails.root.to_s, @new_path)
       puts 'Done!'
       puts "New application path is '#{@new_path}'"
