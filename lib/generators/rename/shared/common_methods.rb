@@ -29,6 +29,7 @@ module CommonMethods
   def prepare_app_vars
     @new_key         = new_name.gsub(/\W/, '_')
     @old_module_name = app_parent
+    @old_dir         = File.basename(Dir.getwd)
     @new_module_name = @new_key.squeeze('_').camelize
     @new_dir         = new_name.gsub(/[&%*@()!{}\[\]'\\\/"]+/, '')
     @new_path        = Rails.root.to_s.split('/')[0...-1].push(@new_dir).join('/')
@@ -87,6 +88,7 @@ module CommonMethods
   # rename_app_to_new_app_directory
   def change_app_directory
     rename_references
+    remove_references
     rename_directory
   end
 
@@ -101,17 +103,23 @@ module CommonMethods
   end
 
   def rename_references
-    puts 'Renaming references...'
-    old_basename = File.basename(Dir.getwd)
+    print 'Renaming references...'
 
     in_root do
-      Dir.glob('.idea/*', File::FNM_DOTMATCH).each do |file|
-        replace_into_file(file, old_basename, @new_dir)
-      end
-
       gem_set_file = '.ruby-gemset'
-      replace_into_file(gem_set_file, old_basename, @new_dir) if file_exist?(gem_set_file)
+      replace_into_file(gem_set_file, @old_dir, @new_dir) if file_exist?(gem_set_file)
     end
+    puts 'Done!'
+  end
+
+  def remove_references
+    print 'Removing references...'
+
+    begin
+      FileUtils.rm_r('.idea')
+    rescue Exception => ex
+    end
+    puts 'Done!'
   end
 
   def rename_directory
